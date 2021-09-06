@@ -35,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
         String nickname = request.getNickname();
         String password = request.getPassword();
 
+        // Check if fields are valid.
         if (email == null) {
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
@@ -103,7 +104,6 @@ public class AuthServiceImpl implements AuthService {
 
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }
-
 
         MemberEntity newMember = MemberEntity.builder()
                 .email(email)

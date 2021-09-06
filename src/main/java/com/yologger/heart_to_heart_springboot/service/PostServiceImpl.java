@@ -79,6 +79,7 @@ public class PostServiceImpl implements PostService {
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }
 
+        // Check if member already exists.
         Optional<MemberEntity> result = memberRepository.findById(userId);
 
         if (result.isEmpty()) {
@@ -92,14 +93,12 @@ public class PostServiceImpl implements PostService {
             responseBody.put("code", -4);
 
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
-
         }
 
         MultipartFile[] files = request.getFiles();
 
         List<String> imageUrls = new ArrayList<String>();
 
-        // Upload files
         for (MultipartFile file : files) {
 
             // Check if invalid content-type
@@ -118,9 +117,9 @@ public class PostServiceImpl implements PostService {
             }
 
             try {
-
-                 String imageUrl = awsS3Uploader.upload(file);
-                 imageUrls.add(imageUrl);
+                // Upload files
+                String imageUrl = awsS3Uploader.upload(file);
+                imageUrls.add(imageUrl);
 
             } catch (Exception e) {
                 HttpHeaders responseHeaders = new HttpHeaders();
@@ -140,7 +139,7 @@ public class PostServiceImpl implements PostService {
 
         List<PostImageEntity> postImageEntities = new ArrayList<PostImageEntity>();
 
-        for (String imageUrl: imageUrls) {
+        for (String imageUrl : imageUrls) {
             PostImageEntity postImage = PostImageEntity.builder()
                     .imageUrl(imageUrl)
                     .build();
