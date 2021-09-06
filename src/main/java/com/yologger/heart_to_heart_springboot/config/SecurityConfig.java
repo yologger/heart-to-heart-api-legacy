@@ -1,6 +1,9 @@
 package com.yologger.heart_to_heart_springboot.config;
 
+import com.yologger.heart_to_heart_springboot.repository.MemberRepository;
+import com.yologger.heart_to_heart_springboot.security.filter.VerifyAccessTokenFilter;
 import com.yologger.heart_to_heart_springboot.security.service.MemberDetailsService;
+import com.yologger.heart_to_heart_springboot.util.JwtManager;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +23,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 @EnableWebSecurity
 @Configuration
@@ -31,6 +37,8 @@ import javax.servlet.http.HttpServletResponse;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final MemberDetailsService memberDetailsService;
+    private final JwtManager jwtManager;
+    private final MemberRepository memberRepository;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -50,26 +58,38 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .passwordEncoder(passwordEncoder());
     }
 
+    @Bean
+    public VerifyAccessTokenFilter verifyAccessTokenFilter() {
+        List<String> excludedUrls = new ArrayList<>();
+        excludedUrls.add("/api/v1/auth/join");
+        excludedUrls.add("/api/v1/auth/login");
+        VerifyAccessTokenFilter filter = new VerifyAccessTokenFilter(jwtManager, memberRepository, excludedUrls);
+        return filter;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .cors();
+            .cors();
 
         http
-                .httpBasic().disable()
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            .httpBasic().disable()
+            .csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http
-                .authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
-                // .antMatchers(HttpMethod.GET, "/test/api/test1").authenticated()
-                .antMatchers(HttpMethod.GET, "/test/api/test2").authenticated()
-                .anyRequest().permitAll();
+            .addFilterBefore(verifyAccessTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         http
-                .exceptionHandling()
-                .authenticationEntryPoint((HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) -> {
+            .authorizeRequests()
+            .antMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
+            // .antMatchers(HttpMethod.GET, "/test/api/test1").authenticated()
+            .antMatchers(HttpMethod.GET, "/test/api/test2").authenticated()
+            .anyRequest().permitAll();
+
+        http
+            .exceptionHandling()
+            .authenticationEntryPoint((HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) -> {
                     log.info("authenticationEntryPoint()");
                     /**
                      * 인증(Authentication) 실패 시 호출
@@ -92,6 +112,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     /**
                      * 인증은 성공했으나 권한이 없는(인가되지 않은, Unauthorized) 사용자
                      * */
-                });
+            });
     }
 }

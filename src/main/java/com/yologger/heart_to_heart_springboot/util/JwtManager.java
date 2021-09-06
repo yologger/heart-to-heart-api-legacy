@@ -73,7 +73,13 @@ public class JwtManager {
         return refreshToken;
     }
 
-    public Long getMemberIdFromAccessToken(String accessToken) throws UnsupportedEncodingException {
+    public void verifyAccessToken(String accessToken) throws UnsupportedEncodingException {
+        Jwts.parser()
+                .setSigningKey(accessTokenSecret.getBytes("UTF-8"))  // Set Key
+                .parseClaimsJws(accessToken);  // Parsing and verifying. throws error in case of failure.
+    }
+
+    public Long verifyAccessTokenAndGetMemberId(String accessToken) throws UnsupportedEncodingException {
         Claims claims = Jwts.parser()
                 .setSigningKey(accessTokenSecret.getBytes("UTF-8"))  // Set Key
                 .parseClaimsJws(accessToken)  // Parsing and verifying. throws error in case of failure.
