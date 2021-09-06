@@ -2,12 +2,17 @@ package com.yologger.heart_to_heart_springboot.service;
 
 import com.yologger.heart_to_heart_springboot.controller.api.v1.auth.dto.JoinRequestDTO;
 import com.yologger.heart_to_heart_springboot.controller.api.v1.auth.dto.LogInRequestDTO;
+import com.yologger.heart_to_heart_springboot.controller.api.v1.auth.dto.TokenRequestDTO;
 import com.yologger.heart_to_heart_springboot.controller.service.AuthService;
 import com.yologger.heart_to_heart_springboot.repository.MemberRepository;
 import com.yologger.heart_to_heart_springboot.repository.entity.MemberEntity;
 import com.yologger.heart_to_heart_springboot.security.exception.InvalidPasswordException;
 import com.yologger.heart_to_heart_springboot.security.exception.MemberDoesNotExistException;
 import com.yologger.heart_to_heart_springboot.util.JwtManager;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import netscape.javascript.JSObject;
@@ -23,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -242,5 +248,172 @@ public class AuthServiceImpl implements AuthService {
         responseBody.put("data", data);
 
         return new ResponseEntity(responseBody, responseHeaders, HttpStatus.CREATED);
+    }
+
+    @Transactional
+    @Override
+    public ResponseEntity<JSObject> token(TokenRequestDTO request) {
+
+        // Check if 'user_id' field exists.
+        Long memberId = request.getId();
+        if (memberId == null) {
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("code", -1);
+            responseBody.put("error", "'user_id' field must not be empty.");
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+        }
+
+        // Check if 'refresh_token' field exists.
+        String refreshToken = request.getRefreshToken();
+        if (refreshToken == null) {
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("code", -2);
+            responseBody.put("error", "'refresh_token' field must not be empty.");
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+        }
+
+        // Compare with ex-refresh token
+        Optional<MemberEntity> result = memberRepository.findById(memberId);
+
+        if (result.isEmpty()) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("code", -3);
+            responseBody.put("error", "Invalid refresh token");
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+        }
+
+        if (!(refreshToken.equals(result.get().getRefreshToken()))) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("code", -4);
+            responseBody.put("error", "Invalid refresh token");
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            // Verify refresh token
+            jwtManager.verifyRefreshToken(refreshToken);
+
+            // Reissue access token, refresh token
+            MemberEntity member = result.get();
+
+            String newAccessToken = jwtManager.generateAccessToken(member.getId(), member.getEmail(), member.getFullName(), member.getNickname());
+            String newRefreshToken = jwtManager.generateRefreshToken(member.getId(), member.getEmail(), member.getFullName(), member.getNickname());
+
+            member.setAccessToken(newAccessToken);
+            member.setRefreshToken(newRefreshToken);
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject data = new JSONObject();
+            data.put("user_id", member.getId());
+            data.put("email", member.getEmail());
+            data.put("full_name", member.getFullName());
+            data.put("nickname", member.getNickname());
+            data.put("access_token", newAccessToken);
+            data.put("refresh_token", newRefreshToken);
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.OK.value());
+            responseBody.put("code", -5);
+            responseBody.put("message", "Successfully reissued.");
+            responseBody.put("data", data);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.OK);
+
+        } catch (UnsupportedEncodingException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -5);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        } catch (UnsupportedJwtException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -6);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        } catch (MalformedJwtException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -7);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        } catch (SignatureException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -8);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        } catch (ExpiredJwtException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -9);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        } catch (IllegalArgumentException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -10);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        }
     }
 }

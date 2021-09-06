@@ -63,6 +63,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         List<String> excludedUrls = new ArrayList<>();
         excludedUrls.add("/api/v1/auth/join");
         excludedUrls.add("/api/v1/auth/login");
+        excludedUrls.add("/api/v1/auth/token");
         VerifyAccessTokenFilter filter = new VerifyAccessTokenFilter(jwtManager, memberRepository, excludedUrls);
         return filter;
     }

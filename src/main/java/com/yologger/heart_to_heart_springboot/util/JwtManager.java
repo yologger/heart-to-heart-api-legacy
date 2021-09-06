@@ -88,4 +88,10 @@ public class JwtManager {
         Long id = claims.get("id", Long.class);
         return id;
     }
+
+    public void verifyRefreshToken(String refreshToken) throws UnsupportedEncodingException {
+        Jwts.parser()
+                .setSigningKey(refreshTokenSecret.getBytes("UTF-8"))  // Set Key
+                .parseClaimsJws(refreshToken);  // Parsing and verifying. throws error in case of failure.
+    }
 }
