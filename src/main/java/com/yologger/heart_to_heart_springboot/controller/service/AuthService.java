@@ -8,8 +8,11 @@ import com.yologger.heart_to_heart_springboot.security.exception.MemberDoesNotEx
 import netscape.javascript.JSObject;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
+
 public interface AuthService {
     ResponseEntity<JSObject> join(JoinRequestDTO request);
     ResponseEntity<JSObject> logIn(LogInRequestDTO request) throws MemberDoesNotExistException, InvalidPasswordException;
     ResponseEntity<JSObject> token(TokenRequestDTO request);
+    ResponseEntity<JSObject> logout(String authHeader);
 }

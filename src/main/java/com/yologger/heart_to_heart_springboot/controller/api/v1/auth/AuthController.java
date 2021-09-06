@@ -10,10 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import netscape.javascript.JSObject;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -36,5 +35,10 @@ public class AuthController {
     @PostMapping("/token")
     public ResponseEntity<JSObject> token(@RequestBody TokenRequestDTO request) throws InvalidPasswordException, MemberDoesNotExistException {
         return authService.token(request);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<JSObject> logout(@RequestHeader(value="Authorization") String authHeader) {
+        return authService.logout(authHeader);
     }
 }

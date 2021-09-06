@@ -416,4 +416,57 @@ public class AuthServiceImpl implements AuthService {
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
         }
     }
+
+    @Transactional
+    @Override
+    public ResponseEntity<JSObject> logout(String authHeader) {
+
+        String accessToken = authHeader.substring(7);
+
+        try {
+            Long memberId = jwtManager.verifyAccessTokenAndGetMemberId(accessToken);
+
+            Optional<MemberEntity> result = memberRepository.findById(memberId);
+
+            if (result.isEmpty()) {
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+                JSONObject responseBody = new JSONObject();
+                responseBody.put("timestamp", LocalDateTime.now());
+                responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+                responseBody.put("error", "User does not exists.");
+                responseBody.put("code", -13);
+
+                return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+            }
+
+            MemberEntity member = result.get();
+            member.clearAccessToken();
+            member.clearRefreshToken();
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.OK.value());
+            responseBody.put("message", "Successfully logged out.");
+            responseBody.put("code", 1);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.OK);
+
+        } catch (UnsupportedEncodingException e) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.UNAUTHORIZED.value());
+            responseBody.put("code", -14);
+            responseBody.put("error", e.getLocalizedMessage());
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.UNAUTHORIZED);
+        }
+    }
 }
