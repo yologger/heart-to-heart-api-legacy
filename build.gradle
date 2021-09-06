@@ -53,6 +53,12 @@ dependencies {
 
     // AWS S3
     implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-aws', version: '2.2.5.RELEASE'
+
+    // JWT
+    implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+
+    // Spring Boot Starter Security
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.5.4'
 }
 
 test {

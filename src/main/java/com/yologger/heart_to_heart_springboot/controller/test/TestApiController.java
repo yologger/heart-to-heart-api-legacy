@@ -10,14 +10,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/test/api")
 public class TestApiController {
 
-    @GetMapping("/test")
-    public String test() {
-        return "test";
+    @GetMapping("/test1")
+    public String test1() {
+        return "test1";
     }
 
+    @GetMapping("/test2")
+    public String test2() {
+        return "test2";
+    }
 
-    @GetMapping("/test1")
-    public TestUserDTO test1(@RequestParam("name") String name, @RequestParam String nation) {
+    @GetMapping("/test3")
+    public TestUserDTO test3(@RequestParam("name") String name, @RequestParam String nation) {
         return new TestUserDTO(name, nation);
     }
+
+
 }

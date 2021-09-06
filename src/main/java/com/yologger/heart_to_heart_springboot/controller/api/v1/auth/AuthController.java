@@ -3,6 +3,8 @@ package com.yologger.heart_to_heart_springboot.controller.api.v1.auth;
 import com.yologger.heart_to_heart_springboot.controller.api.v1.auth.dto.JoinRequestDTO;
 import com.yologger.heart_to_heart_springboot.controller.api.v1.auth.dto.LogInRequestDTO;
 import com.yologger.heart_to_heart_springboot.controller.service.AuthService;
+import com.yologger.heart_to_heart_springboot.security.exception.InvalidPasswordException;
+import com.yologger.heart_to_heart_springboot.security.exception.MemberDoesNotExistException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import netscape.javascript.JSObject;
@@ -26,8 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String logIn(@RequestBody LogInRequestDTO request) {
-        log.info("request: " + request);
-        return "logIn";
+    public ResponseEntity<JSObject> logIn(@RequestBody LogInRequestDTO request) throws InvalidPasswordException, MemberDoesNotExistException {
+        return authService.logIn(request);
     }
 }
