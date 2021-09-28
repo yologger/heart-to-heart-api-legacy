@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/v1/post")
 @RequiredArgsConstructor
@@ -19,10 +21,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping(value = "/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<JSONObject> register(@RequestPart("files") MultipartFile[] files,
-                                               @RequestParam("user_id") Long userId,
-                                               @RequestParam("title") String title,
-                                               @RequestParam("content") String content) {
+    public ResponseEntity<JSONObject> register(@RequestPart(value = "files", required = false) MultipartFile[] files, @RequestParam("user_id") Long userId, @RequestParam("title") String title, @RequestParam("content") String content) {
 
         RegisterPostRequestDTO request = RegisterPostRequestDTO.builder()
                 .files(files)
@@ -32,5 +31,15 @@ public class PostController {
                 .build();
 
         return postService.registerPost(request);
+    }
+
+    @GetMapping("/post/{post_id}")
+    public ResponseEntity<JSONObject> getPost(@PathVariable("post_id") Long postId) {
+        return postService.getPost(postId);
+    }
+
+    @GetMapping("/posts")
+    public ResponseEntity<JSONObject> getPosts(@RequestParam("page") Integer page, @RequestParam("size") Integer size) {
+        return postService.getPosts(page, size);
     }
 }

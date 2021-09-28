@@ -13,12 +13,7 @@ import lombok.NoArgsConstructor;
 public class JoinRequestDTO {
 
     private String email;
-
-    @JsonProperty(value = "full_name")
-    private String fullName;
-
+    @JsonProperty(value = "full_name") private String fullName;
     private String nickname;
-
     private String password;
-
 }

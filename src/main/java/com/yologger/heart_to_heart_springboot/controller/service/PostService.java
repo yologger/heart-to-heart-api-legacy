@@ -6,5 +6,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface PostService {
 
-    public ResponseEntity<JSONObject> registerPost(RegisterPostRequestDTO request);
+    ResponseEntity<JSONObject> registerPost(RegisterPostRequestDTO request);
+    ResponseEntity<JSONObject> getPost(Long postId);
+    ResponseEntity<JSONObject> getPosts(Integer page, Integer size);
 }

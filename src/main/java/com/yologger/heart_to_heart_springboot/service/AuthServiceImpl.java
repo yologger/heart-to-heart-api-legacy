@@ -197,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
             responseBody.put("timestamp", LocalDateTime.now());
             responseBody.put("status", HttpStatus.BAD_REQUEST.value());
             responseBody.put("code", -2);
-            responseBody.put("error", "'full_name' field must not be empty.");
+            responseBody.put("error", "'password' field must not be empty.");
 
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }

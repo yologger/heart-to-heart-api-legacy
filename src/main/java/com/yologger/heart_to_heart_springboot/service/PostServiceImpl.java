@@ -9,7 +9,10 @@ import com.yologger.heart_to_heart_springboot.repository.entity.PostEntity;
 import com.yologger.heart_to_heart_springboot.repository.entity.PostImageEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import com.yologger.heart_to_heart_springboot.util.AwsS3Uploader;
 
+import javax.persistence.EntityNotFoundException;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -95,13 +99,71 @@ public class PostServiceImpl implements PostService {
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }
 
+        // In case files does not exist.
+        if (request.getFiles() == null) {
+            MemberEntity member = result.get();
+
+            PostEntity post = PostEntity.builder()
+                    .title(title)
+                    .content(content)
+                    .writer(member)
+                    .build();
+
+            try {
+                // Save post.
+                PostEntity savedPostEntity = postRepository.save(post);
+
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+                JSONObject data = new JSONObject();
+                data.put("post_id", savedPostEntity.getId());
+                data.put("title", title);
+                data.put("content", content);
+
+                JSONObject responseBody = new JSONObject();
+                responseBody.put("timestamp", LocalDateTime.now());
+                responseBody.put("status", HttpStatus.CREATED.value());
+                responseBody.put("message", "Successfully posted.");
+                responseBody.put("data", data);
+                responseBody.put("code", 1);
+                return new ResponseEntity(responseBody, responseHeaders, HttpStatus.CREATED);
+
+            } catch (IllegalArgumentException e) {
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+                JSONObject responseBody = new JSONObject();
+                responseBody.put("timestamp", LocalDateTime.now());
+                responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+                responseBody.put("error", e.getLocalizedMessage());
+                responseBody.put("code", -5);
+                return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         MultipartFile[] files = request.getFiles();
 
         List<String> imageUrls = new ArrayList<String>();
 
         for (MultipartFile file : files) {
 
-            // Check if invalid content-type
+            // Check if file is empty.
+            if (file.isEmpty()) {
+
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+                JSONObject responseBody = new JSONObject();
+                responseBody.put("timestamp", LocalDateTime.now());
+                responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+                responseBody.put("error", "File is empty.");
+                responseBody.put("code", -6);
+
+                return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+            }
+
+            // Check if content-type is image
             if (!file.getContentType().startsWith("image")) {
 
                 HttpHeaders responseHeaders = new HttpHeaders();
@@ -111,7 +173,7 @@ public class PostServiceImpl implements PostService {
                 responseBody.put("timestamp", LocalDateTime.now());
                 responseBody.put("status", HttpStatus.BAD_REQUEST.value());
                 responseBody.put("error", "'Content-type' is invalid. 'Content-type' must be image.");
-                responseBody.put("code", -4);
+                responseBody.put("code", -7);
 
                 return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
             }
@@ -129,7 +191,7 @@ public class PostServiceImpl implements PostService {
                 responseBody.put("timestamp", LocalDateTime.now());
                 responseBody.put("status", HttpStatus.BAD_REQUEST.value());
                 responseBody.put("error", e.getLocalizedMessage());
-                responseBody.put("code", -5);
+                responseBody.put("code", -8);
 
                 return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
             }
@@ -156,12 +218,13 @@ public class PostServiceImpl implements PostService {
 
         try {
             // Save post.
-            postRepository.save(post);
+            PostEntity savedPostEntity = postRepository.save(post);
 
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
 
             JSONObject data = new JSONObject();
+            data.put("post_id", savedPostEntity.getId());
             data.put("title", title);
             data.put("content", content);
             data.put("image_urls", imageUrls);
@@ -182,8 +245,119 @@ public class PostServiceImpl implements PostService {
             responseBody.put("timestamp", LocalDateTime.now());
             responseBody.put("status", HttpStatus.BAD_REQUEST.value());
             responseBody.put("error", e.getLocalizedMessage());
-            responseBody.put("code", -6);
+            responseBody.put("code", -9);
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Override
+    public ResponseEntity<JSONObject> getPost(Long postId) {
+        try {
+            PostEntity postEntity = postRepository.getById(postId);
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONArray imageUrls = new JSONArray();
+            for (PostImageEntity imageUrl: postEntity.getImageUrls()) {
+                imageUrls.add(imageUrl.getImageUrl());
+            }
+
+            JSONObject data = new JSONObject();
+            data.put("post_id", postEntity.getId());
+            data.put("title", postEntity.getTitle());
+            data.put("content", postEntity.getContent());
+            data.put("image_urls", imageUrls);
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.OK.value());
+            responseBody.put("message", "success");
+            responseBody.put("code", 1);
+            responseBody.put("data", data);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.OK);
+
+        } catch (IllegalArgumentException e) {
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("error", e.getLocalizedMessage());
+            responseBody.put("code", -1);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+
+        } catch (EntityNotFoundException e) {
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("error", e.getLocalizedMessage());
+            responseBody.put("code", -2);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+
+        }
+    }
+
+    @Override
+    public ResponseEntity<JSONObject> getPosts(Integer page, Integer size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<PostEntity> result = postRepository.findAll(pageRequest);
+
+        if (result.isEmpty()) {
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("timestamp", LocalDateTime.now());
+            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
+            responseBody.put("error", "Posts do not exist.");
+            responseBody.put("code", -1);
+
+            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
+        }
+
+        JSONObject jsonData = new JSONObject();
+
+        JSONArray jsonPosts = new JSONArray();
+
+        for (PostEntity postEntity: result) {
+            JSONArray jsonImageUrls = new JSONArray();
+            for (PostImageEntity postImageEntity: postEntity.getImageUrls()) {
+                jsonImageUrls.add(postImageEntity.getImageUrl());
+            }
+
+            JSONObject jsonPost = new JSONObject();
+            jsonPost.put("writer_id", postEntity.getWriter().getId());
+            jsonPost.put("writer_email", postEntity.getWriter().getEmail());
+            jsonPost.put("writer_nickname", postEntity.getWriter().getNickname());
+            jsonPost.put("title", postEntity.getTitle());
+            jsonPost.put("content", postEntity.getContent());
+            jsonPost.put("image_urls", jsonImageUrls);
+
+            jsonPosts.add(jsonPost);
+        }
+
+        jsonData.put("size", jsonPosts.size());
+        jsonData.put("posts", jsonPosts);
+
+        JSONObject jsonBody = new JSONObject();
+        jsonBody.put("code", "1");
+        jsonBody.put("message", "Success");
+        jsonBody.put("timestamp", LocalDateTime.now());
+        jsonBody.put("data", jsonData);
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+        return new ResponseEntity<JSONObject>(jsonBody, responseHeaders, HttpStatus.OK);
     }
 }
