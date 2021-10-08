@@ -16,7 +16,5 @@ public class RegisterPostRequestDTO {
 
     private Long userId;
 
-    private String title;
-
     private String content;
 }

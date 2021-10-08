@@ -1,7 +1,7 @@
 # RESTful API Server for heart to heart based on SpringBoot
 
 ## Introduction
-This project is RESTful API server for Heart to Heart application. You can also check `Heart to Heart` application for **Android** [here](https://github.com/yologger/heart_to_heart_android)
+This project is RESTful API server for Heart to Heart application. You can also check `Heart to Heart` application for **Android** [here](https://github.com/yologger/heart_to_heart_android).
 
 
 ## Platform

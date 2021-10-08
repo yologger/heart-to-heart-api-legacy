@@ -18,9 +18,6 @@ public class PostEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false, columnDefinition = "TEXT")
-    private String title;
-
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 

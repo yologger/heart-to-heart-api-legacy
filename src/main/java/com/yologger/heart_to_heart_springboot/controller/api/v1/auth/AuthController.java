@@ -9,8 +9,15 @@ import com.yologger.heart_to_heart_springboot.security.exception.MemberDoesNotEx
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import netscape.javascript.JSObject;
+import org.json.simple.JSONObject;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -38,5 +45,19 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<JSObject> logout(@RequestHeader(value="Authorization") String authHeader) {
         return authService.logout(authHeader);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<JSObject> verify() {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+        JSONObject responseBody = new JSONObject();
+        responseBody.put("timestamp", LocalDateTime.now());
+        responseBody.put("status", HttpStatus.OK.value());
+        responseBody.put("code", 1);
+        responseBody.put("message", "Valid access token");
+
+        return new ResponseEntity(responseBody, responseHeaders, HttpStatus.CREATED);
     }
 }

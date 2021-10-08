@@ -41,7 +41,6 @@ public class PostServiceImpl implements PostService {
     public ResponseEntity<JSONObject> registerPost(RegisterPostRequestDTO request) {
 
         Long userId = request.getUserId();
-        String title = request.getTitle();
         String content = request.getContent();
 
         if (userId == null) {
@@ -53,19 +52,6 @@ public class PostServiceImpl implements PostService {
             responseBody.put("status", HttpStatus.BAD_REQUEST.value());
             responseBody.put("error", "'user_id' field must not empty");
             responseBody.put("code", -1);
-
-            return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
-        }
-
-        if (title == null) {
-            HttpHeaders responseHeaders = new HttpHeaders();
-            responseHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-
-            JSONObject responseBody = new JSONObject();
-            responseBody.put("timestamp", LocalDateTime.now());
-            responseBody.put("status", HttpStatus.BAD_REQUEST.value());
-            responseBody.put("error", "'title' field must not empty");
-            responseBody.put("code", -2);
 
             return new ResponseEntity(responseBody, responseHeaders, HttpStatus.BAD_REQUEST);
         }
@@ -104,7 +90,6 @@ public class PostServiceImpl implements PostService {
             MemberEntity member = result.get();
 
             PostEntity post = PostEntity.builder()
-                    .title(title)
                     .content(content)
                     .writer(member)
                     .build();
@@ -118,7 +103,6 @@ public class PostServiceImpl implements PostService {
 
                 JSONObject data = new JSONObject();
                 data.put("post_id", savedPostEntity.getId());
-                data.put("title", title);
                 data.put("content", content);
 
                 JSONObject responseBody = new JSONObject();
@@ -210,7 +194,6 @@ public class PostServiceImpl implements PostService {
         }
 
         PostEntity post = PostEntity.builder()
-                .title(title)
                 .content(content)
                 .writer(member)
                 .imageUrls(postImageEntities)
@@ -225,7 +208,6 @@ public class PostServiceImpl implements PostService {
 
             JSONObject data = new JSONObject();
             data.put("post_id", savedPostEntity.getId());
-            data.put("title", title);
             data.put("content", content);
             data.put("image_urls", imageUrls);
 
@@ -265,7 +247,6 @@ public class PostServiceImpl implements PostService {
 
             JSONObject data = new JSONObject();
             data.put("post_id", postEntity.getId());
-            data.put("title", postEntity.getTitle());
             data.put("content", postEntity.getContent());
             data.put("image_urls", imageUrls);
 
@@ -339,7 +320,6 @@ public class PostServiceImpl implements PostService {
             jsonPost.put("writer_id", postEntity.getWriter().getId());
             jsonPost.put("writer_email", postEntity.getWriter().getEmail());
             jsonPost.put("writer_nickname", postEntity.getWriter().getNickname());
-            jsonPost.put("title", postEntity.getTitle());
             jsonPost.put("content", postEntity.getContent());
             jsonPost.put("image_urls", jsonImageUrls);
 

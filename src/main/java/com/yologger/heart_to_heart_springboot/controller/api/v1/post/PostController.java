@@ -21,12 +21,11 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping(value = "/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<JSONObject> register(@RequestPart(value = "files", required = false) MultipartFile[] files, @RequestParam("user_id") Long userId, @RequestParam("title") String title, @RequestParam("content") String content) {
+    public ResponseEntity<JSONObject> register(@RequestPart(value = "files", required = false) MultipartFile[] files, @RequestParam("user_id") Long userId, @RequestParam("content") String content) {
 
         RegisterPostRequestDTO request = RegisterPostRequestDTO.builder()
                 .files(files)
                 .userId(userId)
-                .title(title)
                 .content(content)
                 .build();
 
