@@ -1,7 +1,7 @@
-# RESTful API Server for heart to heart based on SpringBoot
+# API Server for heart to heart
 
 ## Introduction
-This project is RESTful API server for Heart to Heart application. You can also check `Heart to Heart` application for **Android** [here](https://github.com/yologger/heart_to_heart_android).
+This project is API server for Heart to Heart application. You can also download `Heart to Heart` application for **Android** [here](https://github.com/yologger/heart_to_heart_android).
 
 
 ## Platform
@@ -22,16 +22,12 @@ Heart to Heart for server has following dependencies:
 ## Features
 #### `Implemented`
 * Sign up
-* Authorization (OAuth 2.0)
+* Authorization (OAuth 2.0, JWT)
 * Create new post
-    - Choose and upload multiple images
-* Show all posts
-    - Infinite scrolling
-* Upload avatar image
+* Show posts
+* Infinite scrolling
+* Dark theme
 
 #### `Not Implemented Yet`
 * HTTPS
-* Follow other users
-* Like post
-* Find password
-* Change password
+* Find, Change password
