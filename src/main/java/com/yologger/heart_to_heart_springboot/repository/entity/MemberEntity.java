@@ -45,6 +45,9 @@ public class MemberEntity extends BaseEntity implements UserDetails {
     @Column(nullable = true)
     private String refreshToken;
 
+    @Column(nullable = true)
+    private String avatarUrl;
+
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 
@@ -104,4 +107,6 @@ public class MemberEntity extends BaseEntity implements UserDetails {
     public void clearRefreshToken() {
         this.refreshToken = null;
     }
+
+    public void setAvatarUrl(String url) { this.avatarUrl = url; }
 }

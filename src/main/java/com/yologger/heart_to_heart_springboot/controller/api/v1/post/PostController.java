@@ -32,13 +32,13 @@ public class PostController {
         return postService.registerPost(request);
     }
 
-    @GetMapping("/post/{post_id}")
-    public ResponseEntity<JSONObject> getPost(@PathVariable("post_id") Long postId) {
-        return postService.getPost(postId);
-    }
-
     @GetMapping("/posts")
     public ResponseEntity<JSONObject> getPosts(@RequestParam("page") Integer page, @RequestParam("size") Integer size) {
         return postService.getPosts(page, size);
+    }
+
+    @GetMapping("/post/{post_id}")
+    public ResponseEntity<JSONObject> getPost(@PathVariable("post_id") Long postId) {
+        return postService.getPost(postId);
     }
 }

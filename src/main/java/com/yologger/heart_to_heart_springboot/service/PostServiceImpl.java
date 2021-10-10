@@ -13,6 +13,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -290,7 +291,8 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public ResponseEntity<JSONObject> getPosts(Integer page, Integer size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        // PageRequest pageRequest = PageRequest.of(page, size);
         Page<PostEntity> result = postRepository.findAll(pageRequest);
 
         if (result.isEmpty()) {
@@ -320,6 +322,7 @@ public class PostServiceImpl implements PostService {
             jsonPost.put("writer_id", postEntity.getWriter().getId());
             jsonPost.put("writer_email", postEntity.getWriter().getEmail());
             jsonPost.put("writer_nickname", postEntity.getWriter().getNickname());
+            jsonPost.put("avatar_url", postEntity.getWriter().getAvatarUrl());
             jsonPost.put("content", postEntity.getContent());
             jsonPost.put("image_urls", jsonImageUrls);
 

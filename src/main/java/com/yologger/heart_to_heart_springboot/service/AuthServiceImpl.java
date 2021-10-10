@@ -237,6 +237,7 @@ public class AuthServiceImpl implements AuthService {
         data.put("email", me.getEmail());
         data.put("full_name", me.getFullName());
         data.put("nickname", me.getNickname());
+        data.put("avatar_url", me.getAvatarUrl());
         data.put("access_token", accessToken);
         data.put("refresh_token", refreshToken);
 
@@ -338,6 +339,7 @@ public class AuthServiceImpl implements AuthService {
             data.put("nickname", member.getNickname());
             data.put("access_token", newAccessToken);
             data.put("refresh_token", newRefreshToken);
+            data.put("image_url", member.getAvatarUrl());
 
             JSONObject responseBody = new JSONObject();
             responseBody.put("timestamp", LocalDateTime.now());
