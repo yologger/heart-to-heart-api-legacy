@@ -6,8 +6,8 @@ This project is API server for Heart to Heart application. You can also download
 
 ## Platform
 * AWS EC2
-* AWS S3
 * AWS RDB
+* AWS S3
 
 ## Dependencies
 Heart to Heart for server has following dependencies:
