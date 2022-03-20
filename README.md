@@ -1,33 +1,4 @@
-# API Server for heart to heart
+# heart-to-heart-api-legacy
 
 ## Introduction
-This project is API server for Heart to Heart application. You can also download `Heart to Heart` application for **Android** [here](https://github.com/yologger/heart_to_heart_android).
-
-
-## Platform
-* AWS EC2
-* AWS RDB
-* AWS S3
-
-## Dependencies
-Heart to Heart for server has following dependencies:
-* Spring Boot
-* Spring Security
-* Spring Data JPA
-* MySQL Driver
-* Lombok
-* JSONObject
-* jjwt
-
-## Features
-#### `Implemented`
-* Sign up
-* Authorization (OAuth 2.0, JWT)
-* Create new post
-* Show posts
-* Infinite scrolling
-* Dark theme
-
-#### `Not Implemented Yet`
-* HTTPS
-* Find, Change password
+이 프로젝트는 deprecated 되었습니다. 새로운 프로젝트는 [이 곳](https://github.com/yologger/heart-to-heart-api)에서 확인할 수 있습니다.
